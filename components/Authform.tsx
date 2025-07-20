@@ -6,18 +6,16 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import {
   Form,
-  FormControl,
-  FormDescription,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
 import { toast } from "sonner"
 import FormField from "./FormField"
 import { useRouter } from "next/navigation"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/Firebase/client"
+import { signIn, signUp } from "@/lib/actions/auth.action"
 
 
 
@@ -42,21 +40,41 @@ const AuthForm = ({type}: {type: FormType}) => {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try{
         if(type === "sign-in"){
             // Handle sign-in logic
-            console.log("Signing in with values:", values);
+            const { email, password } = values;
+            const usercredentials = await signInWithEmailAndPassword(auth, email, password);
+            const idtoken = await usercredentials.user.getIdToken();
+            if(!idtoken){
+                toast.error("Failed to get ID token");
+              }
+              await signIn({
+                email,
+                idToken: idtoken
+              });
+
             toast.success("Signed in successfully");
             router.push("/");
         } else {
             // Handle sign-up logic
-            console.log("Signing up with values:", values);
-            toast.success("Signed up successfully");
-            router.push("/sign-in");
-        }
+           const{ name , email , password} = values;
+           const usercredentials = await createUserWithEmailAndPassword(auth,email,password);
+          const result = await signUp({
+            uid: usercredentials.user.uid,
+            name: name!,
+            email,
+            password
+          });
+          toast.success("Signed up successfully");
+          if(!result?.success){
+            toast.error(result?.message);
+            return;
+          }
         form.reset();
     }
+  }
     catch(err){
         console.log(err);
         toast.error(`Something went wrong: ${err}`);
