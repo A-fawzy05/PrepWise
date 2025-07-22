@@ -1,15 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
+  trailingSlash: true, // Helps with static file routing
+  images: { unoptimized: true }, // Required for static exports
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  rules: {
-      "@typescript-eslint/no-unused-vars": "off", // Disable unused var checks
-    },
+  
 };
 
 export default nextConfig;
