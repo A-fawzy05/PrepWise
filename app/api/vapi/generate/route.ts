@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 
-import { db } from "@/Firebase/admin";
+import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 import { error } from "console";
 export async function GET(){
