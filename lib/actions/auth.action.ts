@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { auth, db } from "@/firebase/admin";
@@ -49,16 +50,11 @@ export async function signUp(params: SignUpParams) {
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error creating user:", error);
 
     // Handle Firebase specific errors
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: string }).code === "auth/email-already-exists"
-    ) {
+    if (error.code === "auth/email-already-exists") {
       return {
         success: false,
         message: "This email is already in use",
@@ -84,7 +80,7 @@ export async function signIn(params: SignInParams) {
       };
 
     await setSessionCookie(idToken);
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
 
     return {
@@ -94,7 +90,14 @@ export async function signIn(params: SignInParams) {
   }
 }
 
+// Sign out user by clearing the session cookie
+export async function signOut() {
+  const cookieStore = await cookies();
 
+  cookieStore.delete("session");
+}
+
+// Get current user from session cookie
 export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
 
@@ -123,7 +126,7 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 }
 
-
+// Check if user is authenticated
 export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user;
